@@ -1,0 +1,130 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daylist | My To-Do App</title>
+
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
+</head>
+<body>
+
+    <div class="container">
+
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">✓</span>
+                <span>daylist<span class="dot">.</span></span>
+            </div>
+            <p>Small steps. Big progress.</p>
+        </header>
+
+        <!-- Introduction -->
+        <section class="intro">
+            <p class="eyebrow">YOUR PERSONAL WORKSPACE</p>
+            <h1>Make room for what <span>matters.</span></h1>
+            <p class="subtitle">
+                Get the important stuff out of your head and into a plan.
+            </p>
+        </section>
+
+        <!-- Main To-Do Card -->
+        <main class="todo-card">
+
+            <div class="card-header">
+                <div>
+                    <p class="eyebrow">MY TASKS</p>
+                    <h2>
+                        Today's focus
+                        <span class="task-badge" id="task-count">4 tasks</span>
+                    </h2>
+                </div>
+                <p class="progress-label" id="progress-label">2 / 4 done</p>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-track">
+                <div class="progress-fill" id="progress-bar"></div>
+            </div>
+
+            <!-- Add New Task -->
+            <form id="task-form" class="add-form">
+                <input
+                    type="text"
+                    id="task-input"
+                    placeholder="What needs to get done?"
+                    autocomplete="off"
+                    required
+                >
+                <button type="submit" class="add-button">
+                    + Add task
+                </button>
+            </form>
+
+            <!-- Filters -->
+            <div class="list-header">
+                <p class="eyebrow">YOUR CHECKLIST</p>
+
+                <div class="filters">
+                    <button type="button" class="filter-btn active" data-filter="all">All</button>
+                    <button type="button" class="filter-btn" data-filter="active">Active</button>
+                    <button type="button" class="filter-btn" data-filter="completed">Completed</button>
+                </div>
+            </div>
+
+            <!-- Our Tasks -->
+            <ul class="task-list" id="task-list">
+
+                <li class="task-item">
+                    <label class="task-label">
+                        <input type="checkbox" class="task-checkbox" checked>
+                        <span class="task-text">Finish my JavaScript lesson</span>
+                    </label>
+                    <button type="button" class="delete-button">×</button>
+                </li>
+
+                <li class="task-item">
+                    <label class="task-label">
+                        <input type="checkbox" class="task-checkbox" checked>
+                        <span class="task-text">Set up VS Code project</span>
+                    </label>
+                    <button type="button" class="delete-button">×</button>
+                </li>
+
+                <li class="task-item">
+                    <label class="task-label">
+                        <input type="checkbox" class="task-checkbox">
+                        <span class="task-text">Build my first to-do app</span>
+                    </label>
+                    <button type="button" class="delete-button">×</button>
+                </li>
+
+                <li class="task-item">
+                    <label class="task-label">
+                        <input type="checkbox" class="task-checkbox">
+                        <span class="task-text">Practice nested loops</span>
+                    </label>*-
+                    <button type="button" class="delete-button">×</button>
+                </li>
+
+            </ul>
+
+            <!-- Footer -->
+            <div class="card-footer">
+                <p id="remaining-count">2 tasks left — keep going!</p>
+                <button type="button" id="clear-completed">Clear completed</button>
+            </div>
+
+        </main>
+
+        <footer class="footer">
+            Your space to get things done ✦
+        </footer>
+
+    </div>
+
+</body>
+</html>
