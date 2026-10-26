@@ -5,6 +5,7 @@ const taskForm = document.getElementById("task-form"); // Add task form
 const taskList = document.getElementById("task-list"); // UL task list
 const taskCount = document.getElementById("task-count");
 const progressLabel = document.getElementById("progress-label"); // Completed progress display
+const progressBar = document.getElementById("progress-bar"); // Purple progress bar
 console.log(taskCount);
 
 /* ===== 2. UPDATE TASK COUNTER ===== */
@@ -16,9 +17,18 @@ function updateTaskCount() {
 function updateProgress() {
   const total = taskList.children.length;
   const completed = document.querySelectorAll(".task-checkbox:checked").length;
+  const percentage = (completed / total) * 100;
+
+  console.log(percentage);
 
   progressLabel.textContent = completed + " / " + total + " done";
+  progressBar.style.width = percentage + "%";
 }
+
+/* ===== 3. CHECKBOX CHANGES ===== */
+taskList.addEventListener("change", function () {
+  updateProgress();
+});
 
 /* ===== 2. HANDLE FORM SUBMISSION ===== */
 
@@ -52,11 +62,13 @@ taskForm.addEventListener("submit", function (e) {
 
   taskList.appendChild(newItem);
   updateTaskCount();
+  updateProgress();
 
   // DELETE TASK WHEN CLICKED
   deleteButton.addEventListener("click", function () {
     newItem.remove();
     updateTaskCount();
+    updateProgress();
   });
 
   // RESET INPUT
