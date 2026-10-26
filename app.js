@@ -4,7 +4,21 @@ const taskInput = document.getElementById("task-input"); // Text input
 const taskForm = document.getElementById("task-form"); // Add task form
 const taskList = document.getElementById("task-list"); // UL task list
 const taskCount = document.getElementById("task-count");
+const progressLabel = document.getElementById("progress-label"); // Completed progress display
 console.log(taskCount);
+
+/* ===== 2. UPDATE TASK COUNTER ===== */
+function updateTaskCount() {
+  taskCount.textContent = taskList.children.length + " tasks";
+}
+
+// UPDATE COMPLETED TASK PROGRESS
+function updateProgress() {
+  const total = taskList.children.length;
+  const completed = document.querySelectorAll(".task-checkbox:checked").length;
+
+  progressLabel.textContent = completed + " / " + total + " done";
+}
 
 /* ===== 2. HANDLE FORM SUBMISSION ===== */
 
@@ -37,13 +51,12 @@ taskForm.addEventListener("submit", function (e) {
   newItem.appendChild(deleteButton);
 
   taskList.appendChild(newItem);
-  taskCount.textContent = taskList.children.length + " tasks";
+  updateTaskCount();
 
   // DELETE TASK WHEN CLICKED
   deleteButton.addEventListener("click", function () {
     newItem.remove();
-
-    taskCount.textContent = taskList.childElementCount + " tasks";
+    updateTaskCount();
   });
 
   // RESET INPUT
