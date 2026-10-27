@@ -25,6 +25,35 @@ function updateProgress() {
   progressBar.style.width = percentage + "%";
 }
 
+/* ===== GET TASK DATA ===== */
+function getTasks() {
+  const tasks = [];
+
+  taskList.querySelectorAll(".task-item").forEach(function (item) {
+    const text = item.querySelector(".task-text").textContent;
+    const completed = item.querySelector(".task-checkbox").checked;
+
+    tasks.push({
+      text: text,
+      completed: completed,
+    });
+  });
+
+  return tasks;
+}
+
+/* ===== 3. Saves Tasks ===== */
+function saveTasks() {
+  const tasks = getTasks();
+  localStorage.setItem("daylistTasks", JSON.stringify(tasks));
+}
+
+/* ===== 3. Load Tasks ===== */
+function loadTasks() {
+  const savedTasks = JSON.parse(localStorage.getItem("daylistTasks"));
+  console.log(savedTasks);
+}
+
 /* ===== 3. CHECKBOX CHANGES ===== */
 taskList.addEventListener("change", function () {
   updateProgress();
