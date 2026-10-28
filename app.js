@@ -51,7 +51,27 @@ function saveTasks() {
 /* ===== 3. Load Tasks ===== */
 function loadTasks() {
   const savedTasks = JSON.parse(localStorage.getItem("daylistTasks"));
-  console.log(savedTasks);
+  return savedTasks;
+}
+
+/* ===== CREATE TASK ELEMENT ===== */
+function createTaskElement(task) {
+  const newItem = document.createElement("li");
+  newItem.className = "task-item";
+  const taskLabel = document.createElement("label");
+  taskLabel.className = "task-label";
+  const taskCheckbox = document.createElement("input");
+  taskCheckbox.type = "checkbox";
+  taskCheckbox.className = "task-checkbox";
+  taskCheckbox.checked = task.completed;
+  taskLabel.appendChild(taskCheckbox);
+  newItem.appendChild(taskLabel);
+  const taskText = document.createElement("span");
+  taskText.className = "task-text";
+  taskText.textContent = task.text;
+  taskLabel.appendChild(taskText);
+  console.log(taskCheckbox.checked);
+  console.log(newItem);
 }
 
 /* ===== 3. CHECKBOX CHANGES ===== */
