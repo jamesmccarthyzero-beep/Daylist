@@ -70,13 +70,49 @@ function createTaskElement(task) {
   taskText.className = "task-text";
   taskText.textContent = task.text;
   taskLabel.appendChild(taskText);
+  const deleteButton = document.createElement("button");
+  deleteButton.type = "button";
+  deleteButton.className = "delete-button";
+  deleteButton.textContent = "×";
+  newItem.appendChild(deleteButton);
   console.log(taskCheckbox.checked);
-  console.log(newItem);
+  return newItem;
 }
 
-/* ===== 3. CHECKBOX CHANGES ===== */
+/* ===== RESTORE SAVED TASKS ===== */
+function restoreTasks() {
+  const savedTasks = loadTasks();
+
+  if (savedTasks === null) return;
+
+  taskList.replaceChildren();
+
+  savedTasks.forEach(function (task) {
+    const taskElement = createTaskElement(task);
+    taskList.appendChild(taskElement);
+  });
+
+  updateTaskCount();
+  updateProgress();
+}
+
+/* ===== CHECKBOX CHANGES ===== */
+
 taskList.addEventListener("change", function () {
   updateProgress();
+  saveTasks();
+});
+
+/* ===== DELETE BUTTON CLICKS ===== */
+
+taskList.addEventListener("click", function (e) {
+  if (e.target.classList.contains("delete-button")) {
+    const taskItem = e.target.closest(".task-item");
+    taskItem.remove();
+    updateTaskCount();
+    updateProgress();
+    saveTasks();
+  }
 });
 
 /* ===== 2. HANDLE FORM SUBMISSION ===== */
@@ -112,16 +148,11 @@ taskForm.addEventListener("submit", function (e) {
   taskList.appendChild(newItem);
   updateTaskCount();
   updateProgress();
-
-  // DELETE TASK WHEN CLICKED
-  deleteButton.addEventListener("click", function () {
-    newItem.remove();
-    updateTaskCount();
-    updateProgress();
-  });
+  saveTasks();
 
   // RESET INPUT
   taskInput.value = "";
 
   console.log(newItem);
 });
+restoreTasks();
