@@ -6,7 +6,51 @@ const taskList = document.getElementById("task-list"); // UL task list
 const taskCount = document.getElementById("task-count");
 const progressLabel = document.getElementById("progress-label"); // Completed progress display
 const progressBar = document.getElementById("progress-bar"); // Purple progress bar
-console.log(taskCount);
+const filterButtons = document.querySelectorAll(".filter-btn");
+
+/* ===== 1. GET EXISTING HTML ELEMENTS ===== */
+const clearCompletedButton = document.getElementById("clear-completed");
+
+clearCompletedButton.addEventListener("click", function () {
+  const completedCheckboxes = taskList.querySelectorAll(
+    ".task-checkbox:checked",
+  );
+
+  completedCheckboxes.forEach(function (checkbox) {
+    const taskItem = checkbox.closest(".task-item");
+    taskItem.remove();
+  });
+  updateTaskCount();
+  updateProgress();
+  saveTasks();
+
+  console.log("Clear Completed clicked");
+});
+
+/* ===== TASK FILTERS ===== */
+filterButtons.forEach(function (button) {
+  button.addEventListener("click", function () {
+    filterButtons.forEach(function (filterButton) {
+      filterButton.classList.remove("active");
+    });
+    button.classList.add("active");
+    const selectedFilter = button.dataset.filter;
+    const taskItems = taskList.querySelectorAll(".task-item");
+    taskItems.forEach(function (item) {
+      const checkbox = item.querySelector(".task-checkbox");
+      const completed = checkbox.checked;
+
+      if (selectedFilter === "active" && completed) {
+        item.style.display = "none";
+      } else if (selectedFilter === "completed" && !completed) {
+        item.style.display = "none";
+      } else {
+        item.style.display = "";
+      }
+    });
+  });
+  console.log(button.dataset.filter);
+});
 
 /* ===== 2. UPDATE TASK COUNTER ===== */
 function updateTaskCount() {
@@ -17,7 +61,7 @@ function updateTaskCount() {
 function updateProgress() {
   const total = taskList.children.length;
   const completed = document.querySelectorAll(".task-checkbox:checked").length;
-  const percentage = (completed / total) * 100;
+  const percentage = total === 0 ? 0 : (completed / total) * 100;
 
   console.log(percentage);
 
@@ -105,20 +149,24 @@ taskList.addEventListener("change", function () {
 
 /* ===== DELETE BUTTON CLICKS ===== */
 
-taskList.addEventListener("click", function (e) {
-  if (e.target.classList.contains("delete-button")) {
-    const taskItem = e.target.closest(".task-item");
-    taskItem.remove();
-    updateTaskCount();
-    updateProgress();
-    saveTasks();
-  }
-});
-
-/* ===== 2. HANDLE FORM SUBMISSION ===== */
-
 taskForm.addEventListener("submit", function (e) {
   e.preventDefault(); // Stop page refresh
+
+  const normalizedText = taskInput.value.trim().toLowerCase();
+
+  if (normalizedText === "") {
+    return;
+  }
+
+  const existingTasks = getTasks();
+  const duplicateExists = existingTasks.some(function (task) {
+    return task.text.trim().toLowerCase() === normalizedText;
+  });
+
+  if (duplicateExists) {
+    alert("This task already exists!");
+    return;
+  }
 
   // CREATE ELEMENTS
   const newItem = document.createElement("li"); // Task row
