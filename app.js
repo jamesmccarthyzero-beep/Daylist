@@ -23,8 +23,6 @@ clearCompletedButton.addEventListener("click", function () {
   updateTaskCount();
   updateProgress();
   saveTasks();
-
-  console.log("Clear Completed clicked");
 });
 
 /* ===== TASK FILTERS ===== */
@@ -33,24 +31,30 @@ filterButtons.forEach(function (button) {
     filterButtons.forEach(function (filterButton) {
       filterButton.classList.remove("active");
     });
-    button.classList.add("active");
-    const selectedFilter = button.dataset.filter;
-    const taskItems = taskList.querySelectorAll(".task-item");
-    taskItems.forEach(function (item) {
-      const checkbox = item.querySelector(".task-checkbox");
-      const completed = checkbox.checked;
 
-      if (selectedFilter === "active" && completed) {
-        item.style.display = "none";
-      } else if (selectedFilter === "completed" && !completed) {
-        item.style.display = "none";
-      } else {
-        item.style.display = "";
-      }
-    });
+    button.classList.add("active");
+
+    const selectedFilter = button.dataset.filter;
+    applyFilter(selectedFilter);
   });
-  console.log(button.dataset.filter);
 });
+
+function applyFilter(selectedFilter) {
+  const taskItems = taskList.querySelectorAll(".task-item");
+
+  taskItems.forEach(function (item) {
+    const checkbox = item.querySelector(".task-checkbox");
+    const completed = checkbox.checked;
+
+    if (selectedFilter === "active" && completed) {
+      item.style.display = "none";
+    } else if (selectedFilter === "completed" && !completed) {
+      item.style.display = "none";
+    } else {
+      item.style.display = "";
+    }
+  });
+}
 
 /* ===== 2. UPDATE TASK COUNTER ===== */
 function updateTaskCount() {
@@ -62,8 +66,6 @@ function updateProgress() {
   const total = taskList.children.length;
   const completed = document.querySelectorAll(".task-checkbox:checked").length;
   const percentage = total === 0 ? 0 : (completed / total) * 100;
-
-  console.log(percentage);
 
   progressLabel.textContent = completed + " / " + total + " done";
   progressBar.style.width = percentage + "%";
@@ -119,7 +121,6 @@ function createTaskElement(task) {
   deleteButton.className = "delete-button";
   deleteButton.textContent = "×";
   newItem.appendChild(deleteButton);
-  console.log(taskCheckbox.checked);
   return newItem;
 }
 
@@ -145,10 +146,23 @@ function restoreTasks() {
 taskList.addEventListener("change", function () {
   updateProgress();
   saveTasks();
+  const selectedFilter =
+    document.querySelector(".filter-btn.active").dataset.filter;
+  applyFilter(selectedFilter);
 });
 
 /* ===== DELETE BUTTON CLICKS ===== */
+taskList.addEventListener("click", function (e) {
+  if (e.target.classList.contains("delete-button")) {
+    const taskItem = e.target.closest(".task-item");
+    taskItem.remove();
+    updateTaskCount();
+    updateProgress();
+    saveTasks();
+  }
+});
 
+/* ===== HANDLE FORM SUBMMISON */
 taskForm.addEventListener("submit", function (e) {
   e.preventDefault(); // Stop page refresh
 
@@ -168,39 +182,18 @@ taskForm.addEventListener("submit", function (e) {
     return;
   }
 
-  // CREATE ELEMENTS
-  const newItem = document.createElement("li"); // Task row
-  const taskLabel = document.createElement("label"); // Checkbox/text wrapper
-  const taskCheckbox = document.createElement("input");
-  const taskText = document.createElement("span"); // Task text
-  const deleteButton = document.createElement("button"); // Delete button
-
-  // SET PROPERTIES & CLASSES
-  newItem.className = "task-item";
-  taskLabel.className = "task-label";
-  taskCheckbox.className = "task-checkbox";
-  taskCheckbox.type = "checkbox";
-  taskText.className = "task-text";
-  taskText.textContent = taskInput.value;
-  deleteButton.type = "button";
-  deleteButton.className = "delete-button";
-  deleteButton.textContent = "×";
-
-  // BUILD THE HTML STRUCTURE
-  taskLabel.appendChild(taskCheckbox);
-  taskLabel.appendChild(taskText);
-
-  newItem.appendChild(taskLabel);
-  newItem.appendChild(deleteButton);
+  const newTask = { text: taskInput.value.trim(), completed: false };
+  const newItem = createTaskElement(newTask);
 
   taskList.appendChild(newItem);
   updateTaskCount();
   updateProgress();
   saveTasks();
+  const selectedFilter =
+    document.querySelector(".filter-btn.active").dataset.filter;
+  applyFilter(selectedFilter);
 
   // RESET INPUT
   taskInput.value = "";
-
-  console.log(newItem);
 });
 restoreTasks();
