@@ -397,3 +397,21 @@ body {
 #clear-completed {
     color: #b5a0ff;
 }
+
+/* date styles */
+.task-due-date {
+  font-size: 0.75rem;
+  color: #a5a9c5;
+  margin-left: 10px;
+}
+
+#task-due-date {
+  color-scheme: dark;
+  background-color: #2b2b45;
+  color: #e5e7fa;
+  border: 1px solid #484866;
+  border-radius: 8px;
+  padding: 0 8px;
+  height: 56px;
+  text-align: center;
+}

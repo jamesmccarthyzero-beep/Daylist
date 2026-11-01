@@ -1,3 +1,5 @@
+import { loadTasks, saveTasksToStorage } from "./storage.js";
+
 /* ===== 1. GET EXISTING HTML ELEMENTS ===== */
 
 const taskInput = document.getElementById("task-input"); // Text input
@@ -7,9 +9,8 @@ const taskCount = document.getElementById("task-count");
 const progressLabel = document.getElementById("progress-label"); // Completed progress display
 const progressBar = document.getElementById("progress-bar"); // Purple progress bar
 const filterButtons = document.querySelectorAll(".filter-btn");
-
-/* ===== 1. GET EXISTING HTML ELEMENTS ===== */
 const clearCompletedButton = document.getElementById("clear-completed");
+const taskDueDate = document.getElementById("task-due-date");
 
 clearCompletedButton.addEventListener("click", function () {
   const completedCheckboxes = taskList.querySelectorAll(
@@ -78,10 +79,12 @@ function getTasks() {
   taskList.querySelectorAll(".task-item").forEach(function (item) {
     const text = item.querySelector(".task-text").textContent;
     const completed = item.querySelector(".task-checkbox").checked;
+    const dueDate = item.dataset.dueDate;
 
     tasks.push({
       text: text,
       completed: completed,
+      dueDate: dueDate,
     });
   });
 
@@ -91,19 +94,14 @@ function getTasks() {
 /* ===== 3. Saves Tasks ===== */
 function saveTasks() {
   const tasks = getTasks();
-  localStorage.setItem("daylistTasks", JSON.stringify(tasks));
-}
-
-/* ===== 3. Load Tasks ===== */
-function loadTasks() {
-  const savedTasks = JSON.parse(localStorage.getItem("daylistTasks"));
-  return savedTasks;
+  saveTasksToStorage(tasks);
 }
 
 /* ===== CREATE TASK ELEMENT ===== */
 function createTaskElement(task) {
   const newItem = document.createElement("li");
   newItem.className = "task-item";
+  newItem.dataset.dueDate = task.dueDate || "";
   const taskLabel = document.createElement("label");
   taskLabel.className = "task-label";
   const taskCheckbox = document.createElement("input");
@@ -113,9 +111,20 @@ function createTaskElement(task) {
   taskLabel.appendChild(taskCheckbox);
   newItem.appendChild(taskLabel);
   const taskText = document.createElement("span");
+  const dueDateLabel = document.createElement("span");
+  dueDateLabel.className = "task-due-date";
+  if (task.dueDate) {
+    const date = new Date(task.dueDate + "T00:00:00");
+    dueDateLabel.textContent = date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  }
   taskText.className = "task-text";
   taskText.textContent = task.text;
   taskLabel.appendChild(taskText);
+  taskLabel.appendChild(dueDateLabel);
   const deleteButton = document.createElement("button");
   deleteButton.type = "button";
   deleteButton.className = "delete-button";
@@ -182,7 +191,12 @@ taskForm.addEventListener("submit", function (e) {
     return;
   }
 
-  const newTask = { text: taskInput.value.trim(), completed: false };
+  const newTask = {
+    text: taskInput.value.trim(),
+    completed: false,
+    dueDate: taskDueDate.value,
+  };
+
   const newItem = createTaskElement(newTask);
 
   taskList.appendChild(newItem);
@@ -195,5 +209,6 @@ taskForm.addEventListener("submit", function (e) {
 
   // RESET INPUT
   taskInput.value = "";
+  taskDueDate.value = "";
 });
 restoreTasks();
