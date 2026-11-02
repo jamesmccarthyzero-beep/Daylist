@@ -11,6 +11,7 @@ const progressBar = document.getElementById("progress-bar"); // Purple progress 
 const filterButtons = document.querySelectorAll(".filter-btn");
 const clearCompletedButton = document.getElementById("clear-completed");
 const taskDueDate = document.getElementById("task-due-date");
+const taskPriority = document.getElementById("task-priority");
 
 clearCompletedButton.addEventListener("click", function () {
   const completedCheckboxes = taskList.querySelectorAll(
@@ -80,11 +81,13 @@ function getTasks() {
     const text = item.querySelector(".task-text").textContent;
     const completed = item.querySelector(".task-checkbox").checked;
     const dueDate = item.dataset.dueDate;
+    const priority = item.dataset.priority;
 
     tasks.push({
       text: text,
       completed: completed,
       dueDate: dueDate,
+      priority: priority,
     });
   });
 
@@ -97,11 +100,37 @@ function saveTasks() {
   saveTasksToStorage(tasks);
 }
 
+const priorityOrder = {
+  high: 1,
+  normal: 2,
+  low: 3,
+};
+
+function sortTasksByPriority() {
+  const taskItems = Array.from(taskList.children);
+  taskItems.sort(function (a, b) {
+    const priorityA = a.dataset.priority;
+    const priorityB = b.dataset.priority;
+
+    const rankA = priorityOrder[priorityA];
+    const rankB = priorityOrder[priorityB];
+
+    return rankA - rankB;
+  });
+
+  taskItems.forEach(function (item) {
+    taskList.appendChild(item);
+  });
+}
+
 /* ===== CREATE TASK ELEMENT ===== */
 function createTaskElement(task) {
   const newItem = document.createElement("li");
   newItem.className = "task-item";
   newItem.dataset.dueDate = task.dueDate || "";
+  newItem.dataset.priority = ["normal", "high", "low"].includes(task.priority)
+    ? task.priority
+    : "normal";
   const taskLabel = document.createElement("label");
   taskLabel.className = "task-label";
   const taskCheckbox = document.createElement("input");
@@ -112,6 +141,9 @@ function createTaskElement(task) {
   newItem.appendChild(taskLabel);
   const taskText = document.createElement("span");
   const dueDateLabel = document.createElement("span");
+  const priorityLabel = document.createElement("span");
+  priorityLabel.className = "priority-badge";
+  priorityLabel.textContent = newItem.dataset.priority;
   dueDateLabel.className = "task-due-date";
   if (task.dueDate) {
     const date = new Date(task.dueDate + "T00:00:00");
@@ -125,6 +157,7 @@ function createTaskElement(task) {
   taskText.textContent = task.text;
   taskLabel.appendChild(taskText);
   taskLabel.appendChild(dueDateLabel);
+  taskLabel.appendChild(priorityLabel);
   const deleteButton = document.createElement("button");
   deleteButton.type = "button";
   deleteButton.className = "delete-button";
@@ -195,11 +228,13 @@ taskForm.addEventListener("submit", function (e) {
     text: taskInput.value.trim(),
     completed: false,
     dueDate: taskDueDate.value,
+    priority: taskPriority.value,
   };
 
   const newItem = createTaskElement(newTask);
 
   taskList.appendChild(newItem);
+  sortTasksByPriority();
   updateTaskCount();
   updateProgress();
   saveTasks();
@@ -210,5 +245,8 @@ taskForm.addEventListener("submit", function (e) {
   // RESET INPUT
   taskInput.value = "";
   taskDueDate.value = "";
+  taskPriority.value = "normal";
 });
 restoreTasks();
+
+sortTasksByPriority();
