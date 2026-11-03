@@ -436,3 +436,12 @@ body {
   background-color: #293d58;
   color: #a9ceff;
 }
+
+/* styles for the due and overdue */
+.overdue{
+    color: #f87171;
+}
+
+.due-today{
+    color:#fbbf24;
+}
