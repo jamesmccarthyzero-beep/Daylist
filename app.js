@@ -13,6 +13,13 @@ const clearCompletedButton = document.getElementById("clear-completed");
 const taskDueDate = document.getElementById("task-due-date");
 const taskPriority = document.getElementById("task-priority");
 const remainingCount = document.getElementById("remaining-count");
+const clearDueDateButton = document.getElementById("clear-due-date");
+const submitButton = document.querySelector(".add-button");
+let editingTask = null;
+
+clearDueDateButton.addEventListener("click", function () {
+  taskDueDate.value = "";
+});
 
 clearCompletedButton.addEventListener("click", function () {
   const completedCheckboxes = taskList.querySelectorAll(
@@ -171,6 +178,8 @@ function updateDueDateLabel(taskItem) {
       dueDateLabel.textContent += " • Due Today";
       dueDateLabel.classList.add("due-today");
     }
+  } else {
+    dueDateLabel.textContent = "";
   }
 }
 
@@ -202,10 +211,15 @@ function createTaskElement(task) {
   taskLabel.appendChild(taskText);
   taskLabel.appendChild(dueDateLabel);
   taskLabel.appendChild(priorityLabel);
+  const editButton = document.createElement("button");
   const deleteButton = document.createElement("button");
   deleteButton.type = "button";
+  editButton.type = "button";
   deleteButton.className = "delete-button";
+  editButton.className = "edit-button";
   deleteButton.textContent = "×";
+  editButton.textContent = "Edit";
+  newItem.appendChild(editButton);
   newItem.appendChild(deleteButton);
   updateDueDateLabel(newItem);
   return newItem;
@@ -242,14 +256,31 @@ taskList.addEventListener("change", function (event) {
 
 /* ===== DELETE BUTTON CLICKS ===== */
 taskList.addEventListener("click", function (e) {
+  const taskItem = e.target.closest(".task-item");
   if (e.target.classList.contains("delete-button")) {
-    const taskItem = e.target.closest(".task-item");
     taskItem.remove();
     updateTaskCount();
     updateProgress();
     saveTasks();
+  } else if (e.target.classList.contains("edit-button")) {
+    const taskText = taskItem.querySelector(".task-text");
+    taskInput.value = taskText.textContent;
+    taskDueDate.value = taskItem.dataset.dueDate;
+    editingTask = taskItem;
+    submitButton.textContent = "Save Changes";
+    taskPriority.value = taskItem.dataset.priority;
   }
 });
+
+function formatTaskText(text) {
+  const words = text.trim().split(" ");
+  const capitalizedWords = words.map(function (word) {
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  });
+
+  const formattedText = capitalizedWords.join(" ");
+  return formattedText;
+}
 
 /* ===== HANDLE FORM SUBMMISON */
 taskForm.addEventListener("submit", function (e) {
@@ -262,7 +293,10 @@ taskForm.addEventListener("submit", function (e) {
   }
 
   const existingTasks = getTasks();
-  const duplicateExists = existingTasks.some(function (task) {
+  const duplicateExists = existingTasks.some(function (task, index) {
+    if (taskList.children[index] === editingTask) {
+      return false;
+    }
     return task.text.trim().toLowerCase() === normalizedText;
   });
 
@@ -271,15 +305,26 @@ taskForm.addEventListener("submit", function (e) {
     return;
   }
 
-  const words = taskInput.value.trim().split(" ");
-  const capitalizedWords = words.map(function (word) {
-    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-  });
-
-  const formattedText = capitalizedWords.join(" ");
+  if (editingTask !== null) {
+    const taskText = editingTask.querySelector(".task-text");
+    taskText.textContent = formatTaskText(taskInput.value);
+    editingTask.dataset.dueDate = taskDueDate.value;
+    editingTask.dataset.priority = taskPriority.value;
+    updateDueDateLabel(editingTask);
+    const priorityLabel = editingTask.querySelector(".priority-badge");
+    priorityLabel.textContent = editingTask.dataset.priority;
+    sortTasksByPriority();
+    saveTasks();
+    editingTask = null;
+    taskInput.value = "";
+    taskDueDate.value = "";
+    taskPriority.value = "normal";
+    submitButton.textContent = "+ Add task";
+    return;
+  }
 
   const newTask = {
-    text: formattedText,
+    text: formatTaskText(taskInput.value),
     completed: false,
     dueDate: taskDueDate.value,
     priority: taskPriority.value,
