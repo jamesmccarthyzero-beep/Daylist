@@ -51,14 +51,29 @@ filterButtons.forEach(function (button) {
 
 function applyFilter(selectedFilter) {
   const taskItems = taskList.querySelectorAll(".task-item");
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   taskItems.forEach(function (item) {
     const checkbox = item.querySelector(".task-checkbox");
     const completed = checkbox.checked;
 
+    const dueDate = item.dataset.dueDate;
+    const date = new Date(dueDate + "T00:00:00");
+    // console.log("Parsed date:", date, "Timestamp:", date.getTime());
+    const hasDueDate = dueDate !== "";
+    // console.log("Due date:", dueDate, "Has date:", hasDueDate);
+    // console.log(Number.isNaN(date.getTime()));
+    const hasValidDate = hasDueDate && Number.isFinite(date.getTime());
+    // console.log(hasValidDate);
+    const isToday = today.getTime() === date.getTime();
+    console.log("Is due today:", isToday);
+
     if (selectedFilter === "active" && completed) {
       item.style.display = "none";
     } else if (selectedFilter === "completed" && !completed) {
+      item.style.display = "none";
+    } else if (selectedFilter === "today" && (!hasValidDate || !isToday)) {
       item.style.display = "none";
     } else {
       item.style.display = "";

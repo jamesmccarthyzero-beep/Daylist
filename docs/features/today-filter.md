@@ -2,6 +2,14 @@
 
 > **Example based on your actual Daylist code.** This plan is intentionally not a full code solution. Its purpose is to show how to think through and track a feature while you write it.
 
+ID | Decision |
+|---|---|
+| D1 | **Yes:** Include completed tasks if due today |
+| D2 | **No:** Do not include overdue tasks |
+| D3 | **Hide:** Tasks with no due date do not appear in Today |
+| D4 | **No:** Do not change task counters/progress; they remain global |
+| D5 | **No:** Do not remember the selected filter after refresh; start on All
+
 ## 0. Ticket and status
 
 - **Feature:** Today task filter
