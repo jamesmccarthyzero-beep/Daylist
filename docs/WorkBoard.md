@@ -83,20 +83,20 @@ SAME task list on screen, different visible tasks
 - [x] C3. Prepare `today` once and each task's `date` as local Date objects.
 - [x] **C4. CURRENT STEP:** Prevent blank/invalid dates from matching Today.
 - [x] C5. Compare calendar days by **numeric date values** (not `Date` objects with `===`).
-- [ ] C6. Extend the existing visibility conditions for `"today"`, retaining All / Active / Completed.
-- [ ] C7. In the **edit** branch of form submit, reapply the current filter after changes are saved.
-- [ ] C8. Remove temporary `console.log(dueDate)` after verifying behavior.
+- [x] C6. Extend the existing visibility conditions for `"today"`, retaining All / Active / Completed.
+- [x] C7. In the **edit** branch of form submit, reapply the current filter after changes are saved.
+- [x] C8. Remove temporary `console.log(dueDate)` after verifying behavior.
 
 ### QA. Test and finish
-- [ ] QA1. Today shows incomplete + completed tasks due today.
-- [ ] QA2. Today hides yesterday, tomorrow, no date, and invalid dates.
-- [ ] QA3. Switching among All / Active / Completed / Today works.
-- [ ] QA4. Add new tasks while Today is selected (matching and nonmatching).
-- [ ] QA5. Edit a due date today → tomorrow and tomorrow → today while Today is selected.
-- [ ] QA6. Check/uncheck, delete, sort, and refresh still work.
-- [ ] QA7. Counters remain global; no console errors; buttons fit mobile.
-- [ ] QA8. Review `git diff`, update the full FPT test results, and commit.
-- [ ] QA9. Record commit hash, mark the full FPT **Done**.
+- [x] QA1. Today shows incomplete + completed tasks due today.
+- [x] QA2. Today hides yesterday, tomorrow, no date, and invalid dates.
+- [x] QA3. Switching among All / Active / Completed / Today works.
+- [x] QA4. Add new tasks while Today is selected (matching and nonmatching).
+- [x] QA5. Edit a due date today → tomorrow and tomorrow → today while Today is selected.
+- [x] QA6. Check/uncheck, delete, sort, and refresh still work.
+- [x] QA7. Counters remain global; no console errors; buttons fit mobile.
+- [x] QA8. Review `git diff`, update the full FPT test results, and commit.
+- [x] QA9. Record commit hash, mark the full FPT **Done**.
 
 ## Three important technical gotchas
 
@@ -113,11 +113,11 @@ SAME task list on screen, different visible tasks
 
 ## Git checkpoint (after passing tests)
 
-- [ ] Run `git status` and review the changed files.
-- [ ] Run `git diff` and `git diff --check`.
-- [ ] Update FPT decisions, tests, and final behavior notes.
-- [ ] Stage only relevant files; make a focused feature commit.
-- [ ] Push `v2-development` after committing.
+- [x] Run `git status` and review the changed files.
+- [x] Run `git diff` and `git diff --check`.
+- [x] Update FPT decisions, tests, and final behavior notes.
+- [x] Stage only relevant files; make a focused feature commit.
+- [x] Push `v2-development` after committing.
 
 **Suggested commit:** `feat: add today task filter`
 
