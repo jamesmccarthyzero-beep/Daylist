@@ -1,124 +1,130 @@
-# FPT-001 — Today Filter | Working Quick Reference
+# Daylist — Active WorkBoard
 
-**Project:** Daylist V2 · **Branch:** `v2-development` · **Status:** In progress  
-**Full specification:** [FPT-001-today-filter-trial.md](./FPT-001-today-filter-trial.md)  
-**Purpose:** Open this page *while coding*. Read the full FPT for the why; use this page for the next action, exact code locations, and checkboxes.
+**Feature:** FPT-002 — Upcoming Filter + Shared Date-Range Helper  
+**Project:** Daylist V2 · **Branch:** `v2-development` · **Status:** Approved / Learning  
+**Full plan:** [FPT-002-upcoming-filter.md](./features/FPT-002-upcoming-filter.md)  
+**Last updated:** 2026-11-08
 
+> **One live WorkBoard.** The complete FPT is the permanent record. This file is the **short checklist to keep open while building**. Preserve the completed WorkBoard and FPT in a Git commit before replacing this file for the next feature.
 
-## Product decisions — Approved
+## START HERE — Current step (read this first)
 
-| ID | Decision |
-|---|---|
-| D1 | **Yes:** Include completed tasks if due today |
-| D2 | **No:** Do not include overdue tasks |
-| D3 | **Hide:** Tasks with no due date do not appear in Today |
-| D4 | **No:** Do not change task counters/progress; they remain global |
-| D5 | **No:** Do not remember the selected filter after refresh; start on All |
+**NOW → L1: LEARN reusable functions before code.**
 
-**Scope:** Today is a *view of existing tasks*. It does not create a new page, card, list, sort, or storage format.
+**We know WHAT:** Show incomplete tasks due tomorrow through the seventh following calendar day.
 
-## What happens on a click (read top to bottom)
+**We know WHERE:** Existing `app.js` → `applyFilter(selectedFilter)`; shared date checker will be a small helper function called from this function.
+
+**We are learning HOW:** Design a helper with **inputs (parameters)**, **one boolean result (`return`)**, and **no DOM manipulation**.
+
+**First learning outcome:** Explain, in your own words, *what three inputs the helper receives, what it returns, and what it must not change*.
+
+**Do NOT edit app.js yet.** Next after L1: write a few example cases, baseline-test Today, then implement/refactor one step at a time.
+
+## Approved product decisions — no open questions
+
+- [x] **D1** — Upcoming = tomorrow through day +7, inclusive (local calendar days)
+- [x] **D2** — Exclude completed tasks
+- [x] **D3** — Exclude today, overdue, blank, invalid dates
+- [x] **D4** — Keep current priority-first/date sorting
+- [x] **D5** — Reload starts on All
+- [x] **D6** — Counters/progress stay global
+
+**Scope:** A fifth **view of existing tasks**, not another page/list/card/storage system. After Upcoming, prioritize V2 polish/release rather than more views.
+
+## 30-second architecture map
 
 ```text
-Existing task <li> elements are already in #task-list
-          ↓
-User clicks <button data-filter="today">
-          ↓
-Existing filterButtons click listener runs
-          ↓
-Remove "active" class from other buttons; add to Today
-          ↓  (active class changes BUTTON APPEARANCE only)
-Read button.dataset.filter → "today"
-          ↓
-applyFilter("today") runs
-          ↓
-For EACH .task-item <li>:
-  read item.dataset.dueDate → e.g. "2026-11-10" or ""
-  compare task's date to today's local day
-  use item.style.display = "none" to HIDE non-matches
-  use item.style.display = "" to SHOW matches
-          ↓
-SAME task list on screen, different visible tasks
+Click Today OR Upcoming
+       ↓
+Existing filter click listener → applyFilter(selectedFilter)
+       ↓
+Read current task's due-date string
+       ↓
+[SHARED date-range helper]
+   inputs: taskDateString, startDate, endDate
+   returns: true or false (valid and inside range?)
+       ↓
+Today: range today..today (completed allowed)
+Upcoming: range tomorrow..day+7 AND task incomplete
+       ↓
+applyFilter decides visible / hidden
+       ↓
+Same task list; no task data is changed by filtering
 ```
 
-**Page loading:** `restoreTasks()` reads saved tasks from `localStorage` via `loadTasks()`, creates task elements, and puts them in the DOM. Filters inspect **those current DOM task elements**, not localStorage directly on every click. Add/edit/delete update the DOM and save data.
+**Refactor rule:** Make Today use the shared helper and **prove it still works** BEFORE adding Upcoming logic.
 
-## Find it fast — Code/DOM map
+## Find it fast — file/element/function map
 
-| Need | File → exact location / name | What it does |
+| Need | Exact file / place | Action |
 |---|---|---|
-| Filter buttons | `index.html` → `<div class="filters">` | The All / Active / Completed / Today controls |
-| Identify a button | HTML → `class="filter-btn"` | Shared styling and JS selector |
-| Identify filter choice | HTML → `data-filter="today"` | JS reads `button.dataset.filter` |
-| Selected button style | `style.css` → search `.filter-btn`, `.active` | Verify actual CSS rules; reuse them |
-| Get all filter buttons | `app.js` → `document.querySelectorAll(".filter-btn")` | Today automatically joins existing buttons |
-| Handle filter clicks | `app.js` → `filterButtons.forEach(...)` | Sets button `.active`, calls `applyFilter` |
-| Decide task visibility | `app.js` → `applyFilter(selectedFilter)` | **Main feature implementation location** |
-| Find each task | `app.js` → `.querySelectorAll(".task-item")` | Each `item` in `forEach` is a whole `<li>` |
-| Get saved task date | `app.js` → `item.dataset.dueDate` | Reads the `<li>`'s `data-due-date` string |
-| Get completion | `app.js` → `item.querySelector(".task-checkbox").checked` | Read checked state (Today includes both) |
-| Existing date example | `app.js` → `updateDueDateLabel(taskItem)` | Formats label and detects today/overdue; **not filter logic** |
-| Set date on new task | `app.js` → `createTaskElement(task)` | Writes `newItem.dataset.dueDate` |
-| Add/edit task | `app.js` → `taskForm.addEventListener("submit", ...)` | Add already reapplies filter; **edit does not yet** |
-| Load saved tasks | `app.js` → `restoreTasks()`; `storage.js` → `loadTasks()` | Creates DOM from saved data at startup |
-| Save task data | `app.js` → `saveTasks()`; `storage.js` | Persists tasks; filtering must not save |
+| Filter controls | `index.html` → `<div class="filters">` | Add fifth button **after** Today refactor |
+| Button selector/value | `.filter-btn`, `data-filter="upcoming"` | Existing listener will read this |
+| Button styles | `style.css` → search `.filters`, `.filter-btn`, `.active` | Reuse; verify five-button mobile layout |
+| Click handling | `app.js` → `filterButtons.forEach(...)` | **Reuse unchanged** |
+| Visibility controller | `app.js` → `applyFilter(selectedFilter)` | Call helper for Today/Upcoming, preserve other views |
+| Current Today date logic | In `applyFilter()` → `today`, `date`, `hasValidDate`, `isToday` | Refactor after testing helper |
+| Task stored date | `item.dataset.dueDate` | Pass **string** into helper |
+| Task completed? | `item.querySelector(".task-checkbox").checked` | Upcoming must exclude completed |
+| Label formatting | `updateDueDateLabel(taskItem)` | **Do not** put filtering inside this function |
+| Reapply on changes | Form submit (add/edit); task-list change listener | Verify both still call active filter |
+| Sorting | `sortTasksByPriority()` | Leave unchanged |
+| Persistence | `getTasks()`, `saveTasks()`, `restoreTasks()`, `storage.js` | Leave unchanged |
 
-**HTML / JS reminder:** `data-due-date` ↔ `.dataset.dueDate`; between tags ↔ `.textContent`; form controls ↔ `.value`.
+**New proposed helper contract:** `isDueDateInRange(dueDateString, startDate, endDate)` → boolean. Validates task date, checks inclusive calendar-day range. **No DOM, no save, no completion rule**.
 
-## Implementation sequence — Check when verified
+## Checkboxes — verify before checking
 
-### A. Understand and prepare
-- [x] A1. Answer product questions D1–D5.
-- [x] A2. Locate the existing filter click listener and `applyFilter()`.
-- [x] A3. Copy decisions D1–D5 into the full FPT (the original trial still says "proposed").
+### A. Requirements + learn-first
 
-### B. HTML and CSS
-- [x] B1. Add the Today button using `class="filter-btn"` and `data-filter="today"`.
-- [x] B2. In browser, verify Today appears and its active highlight switches properly.
-- [x] B3. Check four buttons at a narrow viewport; change CSS only if needed.
+- [x] A1. Approve product decisions D1–D6.
+- [x] **L1. CURRENT — Learn** parameters vs arguments, return values, function responsibility.
+- [x] L2. Explain helper's three inputs, result, and why it must not manipulate the page.
+- [x] L3. Plan sample cases (today, tomorrow, day+7, day+8, no date, invalid date).
 
-### C. JavaScript
-- [x] C1. Reuse the current click listener (no extra listener needed).
-- [x] C2. In `applyFilter()`, read `item.dataset.dueDate` for each task.
-- [x] C3. Prepare `today` once and each task's `date` as local Date objects.
-- [x] **C4. CURRENT STEP:** Prevent blank/invalid dates from matching Today.
-- [x] C5. Compare calendar days by **numeric date values** (not `Date` objects with `===`).
-- [x] C6. Extend the existing visibility conditions for `"today"`, retaining All / Active / Completed.
-- [x] C7. In the **edit** branch of form submit, reapply the current filter after changes are saved.
-- [x] C8. Remove temporary `console.log(dueDate)` after verifying behavior.
+### B. Safe refactor of Today (before Upcoming)
 
-### QA. Test and finish
-- [x] QA1. Today shows incomplete + completed tasks due today.
-- [x] QA2. Today hides yesterday, tomorrow, no date, and invalid dates.
-- [x] QA3. Switching among All / Active / Completed / Today works.
-- [x] QA4. Add new tasks while Today is selected (matching and nonmatching).
-- [x] QA5. Edit a due date today → tomorrow and tomorrow → today while Today is selected.
-- [x] QA6. Check/uncheck, delete, sort, and refresh still work.
-- [x] QA7. Counters remain global; no console errors; buttons fit mobile.
-- [x] QA8. Review `git diff`, update the full FPT test results, and commit.
-- [x] QA9. Record commit hash, mark the full FPT **Done**.
+- [x] B1. Review current `applyFilter()` and baseline-test Today (including completed due-today task).
+- [x] B2. Implement helper independently of UI and test sample date-range booleans with console logs.
+- [x] B3. Make Today call helper using start/end = today.
+- [x] B4. Regression-test Today (due today, past, tomorrow, blank, completed) and other existing views.
+- [x] B5. Remove temporary logs from this step.
 
-## Three important technical gotchas
+### C. Upcoming UI + behavior
 
-1. A blank `dueDate` is `""`; `new Date("" + "T00:00:00")` is invalid. Guard empty or invalid values before comparing.
-2. `date === today` is not a reliable calendar comparison for two Date objects; use normalized numeric values such as `.getTime()`.
-3. Removing `.active` from filter **buttons** only changes which button looks selected. Hiding task **elements** is the separate job of `applyFilter()` using `item.style.display`.
+- [x] C1. Add Upcoming `<button>` in `index.html` using `.filter-btn` and `data-filter="upcoming"`.
+- [x] C2. Verify active button styling; test narrow screens and adjust CSS only if necessary.
+- [x] C3. Prepare local calendar boundaries **tomorrow** and **day +7** (inclusive); log/verify.
+- [x] C4. Apply shared helper to task date for Upcoming and separately check task is incomplete.
+- [x] C5. Add Upcoming visibility branch to existing `applyFilter()`; test matching/nonmatching tasks.
+- [x] C6. Verify add/edit/checkbox changes immediately reapply the selected Upcoming view.
+- [x] C7. Remove debug logs.
 
-## Work log — Add one brief entry after each session
+### D. QA + Git
 
-**Date:** __________ · **Working on:** A3 (sync decisions), then C4 (empty dates)  
-**Changed:** __________ · **Why:** __________  
-**Tested / observed:** __________ · **Blocked on:** __________  
-**Next action:** __________
+- [x] QA1. Upcoming shows incomplete tasks due tomorrow and day +7.
+- [x] QA2. Upcoming hides today, yesterday, day +8, blank/invalid dates, completed future tasks.
+- [x] QA3. Today still shows completed due-today tasks; other filters work.
+- [x] QA4. Add/edit/check/delete, sort, progress/counts, reload still work correctly.
+- [x] QA5. Five buttons work on mobile; no console errors.
+- [x] QA6. Run `git status`, `git diff --check`, and inspect `git diff`.
+- [x] QA7. Fill real QA results in full FPT, update function map and work log.
+- [x] QA8. Commit code and docs in focused commits; push `v2-development`.
+- [x] QA9. Record hashes, mark FPT **Done**, commit the completed documentation.
+- [x] QA10. Only then replace WorkBoard for next feature; Git keeps prior board revisions.
 
-## Git checkpoint (after passing tests)
+## Work log (brief)
 
-- [x] Run `git status` and review the changed files.
-- [x] Run `git diff` and `git diff --check`.
-- [x] Update FPT decisions, tests, and final behavior notes.
-- [x] Stage only relevant files; make a focused feature commit.
-- [x] Push `v2-development` after committing.
+**2026-11-08:** Approved Upcoming rules. Recognized reusable date logic between Today and Upcoming. Added explicit learn-first / safe-refactor sequence to FPT-002.  
+**Current:** L1 — Function inputs/outputs/responsibility.  
+**Next:** L2 — Explain proposed helper contract; no Daylist code yet.
 
-**Suggested commit:** `feat: add today task filter`
+## Git + documentation
 
-> **If stuck:** First name the checkbox (for example **C5**) and the missing idea. Search the relevant API/docs or ask for a hint on *that step*—not the entire feature.
+- [x] Review changes and ensure `main` is untouched.
+- [x] Commit this plan when reviewed (`docs: approve FPT-002 shared date helper plan`).
+- [x] Commit code changes in focused checkpoints as work progresses.
+- [x] Update docs with test results and hashes when finished.
+
+**Reminder:** HTML between tags → `.textContent` · form controls → `.value` · `data-*` → `.dataset`.
