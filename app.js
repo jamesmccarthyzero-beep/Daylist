@@ -1,3 +1,5 @@
+import { loadTasks, saveTasksToStorage } from "./storage.js";
+
 /* ===== 1. GET EXISTING HTML ELEMENTS ===== */
 
 const taskInput = document.getElementById("task-input"); // Text input
@@ -7,9 +9,17 @@ const taskCount = document.getElementById("task-count");
 const progressLabel = document.getElementById("progress-label"); // Completed progress display
 const progressBar = document.getElementById("progress-bar"); // Purple progress bar
 const filterButtons = document.querySelectorAll(".filter-btn");
-
-/* ===== 1. GET EXISTING HTML ELEMENTS ===== */
 const clearCompletedButton = document.getElementById("clear-completed");
+const taskDueDate = document.getElementById("task-due-date");
+const taskPriority = document.getElementById("task-priority");
+const remainingCount = document.getElementById("remaining-count");
+const clearDueDateButton = document.getElementById("clear-due-date");
+const submitButton = document.querySelector(".add-button");
+let editingTask = null;
+
+clearDueDateButton.addEventListener("click", function () {
+  taskDueDate.value = "";
+});
 
 clearCompletedButton.addEventListener("click", function () {
   const completedCheckboxes = taskList.querySelectorAll(
@@ -39,16 +49,46 @@ filterButtons.forEach(function (button) {
   });
 });
 
+function isDateInRange(dueDate, startDate, endDate) {
+  if (dueDate === "") {
+    return false;
+  }
+  const taskDate = new Date(dueDate + "T00:00:00");
+  if (!Number.isFinite(taskDate.getTime())) {
+    return false;
+  }
+  const isWithinRange =
+    taskDate.getTime() >= startDate.getTime() &&
+    taskDate.getTime() <= endDate.getTime();
+
+  return isWithinRange;
+}
+
 function applyFilter(selectedFilter) {
   const taskItems = taskList.querySelectorAll(".task-item");
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const endDate = new Date(today);
+  endDate.setDate(endDate.getDate() + 7);
 
   taskItems.forEach(function (item) {
     const checkbox = item.querySelector(".task-checkbox");
     const completed = checkbox.checked;
 
+    const dueDate = item.dataset.dueDate;
+    const isToday = isDateInRange(dueDate, today, today);
+    const isUpcoming = isDateInRange(dueDate, tomorrow, endDate);
+
     if (selectedFilter === "active" && completed) {
       item.style.display = "none";
     } else if (selectedFilter === "completed" && !completed) {
+      item.style.display = "none";
+    } else if (selectedFilter === "today" && !isToday) {
+      item.style.display = "none";
+    } else if (selectedFilter === "upcoming" && (completed || !isUpcoming)) {
       item.style.display = "none";
     } else {
       item.style.display = "";
@@ -66,6 +106,9 @@ function updateProgress() {
   const total = taskList.children.length;
   const completed = document.querySelectorAll(".task-checkbox:checked").length;
   const percentage = total === 0 ? 0 : (completed / total) * 100;
+  const remaining = total - completed;
+
+  remainingCount.textContent = remaining + " tasks left — keep going!";
 
   progressLabel.textContent = completed + " / " + total + " done";
   progressBar.style.width = percentage + "%";
@@ -78,10 +121,14 @@ function getTasks() {
   taskList.querySelectorAll(".task-item").forEach(function (item) {
     const text = item.querySelector(".task-text").textContent;
     const completed = item.querySelector(".task-checkbox").checked;
+    const dueDate = item.dataset.dueDate;
+    const priority = item.dataset.priority;
 
     tasks.push({
       text: text,
       completed: completed,
+      dueDate: dueDate,
+      priority: priority,
     });
   });
 
@@ -91,19 +138,89 @@ function getTasks() {
 /* ===== 3. Saves Tasks ===== */
 function saveTasks() {
   const tasks = getTasks();
-  localStorage.setItem("daylistTasks", JSON.stringify(tasks));
+  saveTasksToStorage(tasks);
 }
 
-/* ===== 3. Load Tasks ===== */
-function loadTasks() {
-  const savedTasks = JSON.parse(localStorage.getItem("daylistTasks"));
-  return savedTasks;
+const priorityOrder = {
+  high: 1,
+  normal: 2,
+};
+
+function sortTasksByPriority() {
+  const taskItems = Array.from(taskList.children);
+  taskItems.sort(function (a, b) {
+    const priorityA = a.dataset.priority;
+    const priorityB = b.dataset.priority;
+    const dateA = a.dataset.dueDate;
+    const dateB = b.dataset.dueDate;
+
+    const rankA = priorityOrder[priorityA];
+    const rankB = priorityOrder[priorityB];
+
+    if (rankA !== rankB) {
+      return rankA - rankB;
+    }
+
+    if (dateA === "" && dateB !== "") {
+      return 1;
+    }
+
+    if (dateA !== "" && dateB === "") {
+      return -1;
+    }
+
+    if (dateA < dateB) {
+      return -1;
+    } else if (dateA === dateB) {
+      return 0;
+    } else {
+      return 1;
+    }
+  });
+
+  taskItems.forEach(function (item) {
+    taskList.appendChild(item);
+  });
+}
+
+function updateDueDateLabel(taskItem) {
+  const dueDateLabel = taskItem.querySelector(".task-due-date");
+  const dueDate = taskItem.dataset.dueDate;
+  const taskCheckbox = taskItem.querySelector(".task-checkbox");
+
+  dueDateLabel.classList.remove("overdue", "due-today");
+
+  if (dueDate) {
+    const date = new Date(dueDate + "T00:00:00");
+
+    dueDateLabel.textContent = date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (date < today && !taskCheckbox.checked) {
+      dueDateLabel.textContent += " • Overdue";
+      dueDateLabel.classList.add("overdue");
+    } else if (date.getTime() === today.getTime() && !taskCheckbox.checked) {
+      dueDateLabel.textContent += " • Due Today";
+      dueDateLabel.classList.add("due-today");
+    }
+  } else {
+    dueDateLabel.textContent = "";
+  }
 }
 
 /* ===== CREATE TASK ELEMENT ===== */
 function createTaskElement(task) {
   const newItem = document.createElement("li");
   newItem.className = "task-item";
+  newItem.dataset.dueDate = task.dueDate || "";
+  newItem.dataset.priority = ["normal", "high"].includes(task.priority)
+    ? task.priority
+    : "normal";
   const taskLabel = document.createElement("label");
   taskLabel.className = "task-label";
   const taskCheckbox = document.createElement("input");
@@ -113,14 +230,28 @@ function createTaskElement(task) {
   taskLabel.appendChild(taskCheckbox);
   newItem.appendChild(taskLabel);
   const taskText = document.createElement("span");
+  const dueDateLabel = document.createElement("span");
+  const priorityLabel = document.createElement("span");
+  priorityLabel.className = "priority-badge";
+  priorityLabel.textContent = newItem.dataset.priority;
+  dueDateLabel.className = "task-due-date";
+
   taskText.className = "task-text";
   taskText.textContent = task.text;
   taskLabel.appendChild(taskText);
+  taskLabel.appendChild(dueDateLabel);
+  taskLabel.appendChild(priorityLabel);
+  const editButton = document.createElement("button");
   const deleteButton = document.createElement("button");
   deleteButton.type = "button";
+  editButton.type = "button";
   deleteButton.className = "delete-button";
+  editButton.className = "edit-button";
   deleteButton.textContent = "×";
+  editButton.textContent = "Edit";
+  newItem.appendChild(editButton);
   newItem.appendChild(deleteButton);
+  updateDueDateLabel(newItem);
   return newItem;
 }
 
@@ -143,24 +274,43 @@ function restoreTasks() {
 
 /* ===== CHECKBOX CHANGES ===== */
 
-taskList.addEventListener("change", function () {
+taskList.addEventListener("change", function (event) {
   updateProgress();
   saveTasks();
   const selectedFilter =
     document.querySelector(".filter-btn.active").dataset.filter;
   applyFilter(selectedFilter);
+  const taskItem = event.target.closest(".task-item");
+  updateDueDateLabel(taskItem);
 });
 
 /* ===== DELETE BUTTON CLICKS ===== */
 taskList.addEventListener("click", function (e) {
+  const taskItem = e.target.closest(".task-item");
   if (e.target.classList.contains("delete-button")) {
-    const taskItem = e.target.closest(".task-item");
     taskItem.remove();
     updateTaskCount();
     updateProgress();
     saveTasks();
+  } else if (e.target.classList.contains("edit-button")) {
+    const taskText = taskItem.querySelector(".task-text");
+    taskInput.value = taskText.textContent;
+    taskDueDate.value = taskItem.dataset.dueDate;
+    editingTask = taskItem;
+    submitButton.textContent = "Save Changes";
+    taskPriority.value = taskItem.dataset.priority;
   }
 });
+
+function formatTaskText(text) {
+  const words = text.trim().split(" ");
+  const capitalizedWords = words.map(function (word) {
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  });
+
+  const formattedText = capitalizedWords.join(" ");
+  return formattedText;
+}
 
 /* ===== HANDLE FORM SUBMMISON */
 taskForm.addEventListener("submit", function (e) {
@@ -173,7 +323,10 @@ taskForm.addEventListener("submit", function (e) {
   }
 
   const existingTasks = getTasks();
-  const duplicateExists = existingTasks.some(function (task) {
+  const duplicateExists = existingTasks.some(function (task, index) {
+    if (taskList.children[index] === editingTask) {
+      return false;
+    }
     return task.text.trim().toLowerCase() === normalizedText;
   });
 
@@ -182,10 +335,38 @@ taskForm.addEventListener("submit", function (e) {
     return;
   }
 
-  const newTask = { text: taskInput.value.trim(), completed: false };
+  if (editingTask !== null) {
+    const taskText = editingTask.querySelector(".task-text");
+    taskText.textContent = formatTaskText(taskInput.value);
+    editingTask.dataset.dueDate = taskDueDate.value;
+    editingTask.dataset.priority = taskPriority.value;
+    updateDueDateLabel(editingTask);
+    const priorityLabel = editingTask.querySelector(".priority-badge");
+    priorityLabel.textContent = editingTask.dataset.priority;
+    sortTasksByPriority();
+    saveTasks();
+    editingTask = null;
+    taskInput.value = "";
+    taskDueDate.value = "";
+    taskPriority.value = "normal";
+    submitButton.textContent = "+ Add task";
+    const selectedFilter =
+      document.querySelector(".filter-btn.active").dataset.filter;
+    applyFilter(selectedFilter);
+    return;
+  }
+
+  const newTask = {
+    text: formatTaskText(taskInput.value),
+    completed: false,
+    dueDate: taskDueDate.value,
+    priority: taskPriority.value,
+  };
+
   const newItem = createTaskElement(newTask);
 
   taskList.appendChild(newItem);
+  sortTasksByPriority();
   updateTaskCount();
   updateProgress();
   saveTasks();
@@ -195,5 +376,9 @@ taskForm.addEventListener("submit", function (e) {
 
   // RESET INPUT
   taskInput.value = "";
+  taskDueDate.value = "";
+  taskPriority.value = "normal";
 });
 restoreTasks();
+
+sortTasksByPriority();
