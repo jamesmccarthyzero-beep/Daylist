@@ -49,26 +49,46 @@ filterButtons.forEach(function (button) {
   });
 });
 
+function isDateInRange(dueDate, startDate, endDate) {
+  if (dueDate === "") {
+    return false;
+  }
+  const taskDate = new Date(dueDate + "T00:00:00");
+  if (!Number.isFinite(taskDate.getTime())) {
+    return false;
+  }
+  const isWithinRange =
+    taskDate.getTime() >= startDate.getTime() &&
+    taskDate.getTime() <= endDate.getTime();
+
+  return isWithinRange;
+}
+
 function applyFilter(selectedFilter) {
   const taskItems = taskList.querySelectorAll(".task-item");
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const endDate = new Date(today);
+  endDate.setDate(endDate.getDate() + 7);
 
   taskItems.forEach(function (item) {
     const checkbox = item.querySelector(".task-checkbox");
     const completed = checkbox.checked;
 
     const dueDate = item.dataset.dueDate;
-    const date = new Date(dueDate + "T00:00:00");
-    const hasDueDate = dueDate !== "";
-    const hasValidDate = hasDueDate && Number.isFinite(date.getTime());
-    const isToday = today.getTime() === date.getTime();
+    const isToday = isDateInRange(dueDate, today, today);
+    const isUpcoming = isDateInRange(dueDate, tomorrow, endDate);
 
     if (selectedFilter === "active" && completed) {
       item.style.display = "none";
     } else if (selectedFilter === "completed" && !completed) {
       item.style.display = "none";
-    } else if (selectedFilter === "today" && (!hasValidDate || !isToday)) {
+    } else if (selectedFilter === "today" && !isToday) {
+      item.style.display = "none";
+    } else if (selectedFilter === "upcoming" && (completed || !isUpcoming)) {
       item.style.display = "none";
     } else {
       item.style.display = "";
